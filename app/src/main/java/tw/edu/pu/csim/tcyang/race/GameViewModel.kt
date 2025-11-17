@@ -21,31 +21,62 @@ class GameViewModel: ViewModel() {
     var circleX by mutableStateOf(0f)
     var circleY by mutableStateOf(0f)
 
-    val horse = Horse()
+    val horse1 = Horse(initialY = 100)
+    val horse2 = Horse(initialY = 300)
+    val horse3 = Horse(initialY = 500)
 
-    // 設定螢幕寬度與高度
+    var winnerMessage by mutableStateOf("")
+
+
     fun SetGameSize(w: Float, h: Float) {
         screenWidthPx = w
         screenHeightPx = h
     }
 
+    private fun ResetHorses() {
+        horse1.HorseX = 0
+        horse2.HorseX = 0
+        horse3.HorseX = 0
+        winnerMessage = ""
+    }
+
+
     fun StartGame() {
-        //回到初使位置
         circleX = 100f
         circleY = screenHeightPx - 100f
 
-        viewModelScope.launch {
-            while (gameRunning) { // 每0.1秒循環
-                delay(100)
-                circleX += 10
+        gameRunning = true
+        ResetHorses()
 
+        viewModelScope.launch {
+            val finishLine = screenWidthPx - 300
+
+            while (gameRunning) {
+                delay(100)
+
+                circleX += 10
                 if (circleX >= screenWidthPx - 100){
                     circleX = 100f
                 }
 
-                horse.Run()
-                if (horse.HorseX >= screenWidthPx - 300){
-                    horse.HorseX = 0
+                if (winnerMessage.isEmpty()) {
+                    horse1.Run()
+                    horse2.Run()
+                    horse3.Run()
+
+                    val winnerNo = when {
+                        horse1.HorseX >= finishLine -> 1
+                        horse2.HorseX >= finishLine -> 2
+                        horse3.HorseX >= finishLine -> 3
+                        else -> 0
+                    }
+
+                    if (winnerNo > 0) {
+                        winnerMessage = "第${winnerNo}馬獲勝"
+
+                        delay(2000)
+                        ResetHorses()
+                    }
                 }
             }
         }
@@ -55,8 +86,4 @@ class GameViewModel: ViewModel() {
         circleX += x
         circleY += y
     }
-
-
-
-
 }
